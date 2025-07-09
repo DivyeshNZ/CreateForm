@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0078d7" />
+
+  <meta charset="UTF-8" />
+  <title>Time Tracking Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h2, h3 {
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    .inspectors {
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+    }
+
+    .inspectors select {
+      flex: 1;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 25px;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: GENERAL INFO -->
+  <div id="page1">
+    <h2>Lead Inspector Info</h2>
+    <form id="generalForm">
+      <label for="date">Date:</label>
+      <input type="date" id="date" required />
+
+      <label for="region">Region:</label>
+      <select id="region" required>
+        <option value="" disabled>Select a region</option>
+        <option value="Auckland">Auckland</option>
+        <option value="Christchurch">Christchurch</option>
+      </select>
+
+      <label for="leadInspector">Lead Inspector Name:</label>
+      <select id="leadInspector" required>
+        <option value="" disabled>Select an Inspector</option>
+        <option value="Divyesh Patel">Divyesh Patel</option>
+        <option value="Anthony Lim">Anthony Lim</option>
+      </select>
+
+      <button type="button" onclick="goToPage2()">Next: QA Imports</button>
+    </form>
+  </div>
+
+  <!-- PAGE 2: QA IMPORTS -->
+  <div id="page2" class="hidden">
+    <button type="button" onclick="goBack()">← Back</button>
+    <h2>QA Imports Details</h2>
+    <form id="importsForm">
+      <label>Start Time:</label>
+      <input type="time" id="startTime" required />
+
+      <label>End Time:</label>
+      <input type="time" id="endTime" required />
+
+      <label for="client">Client:</label>
+      <select id="client" required>
+        <option value="" disabled>Select a client</option>
+        <option value="Woolworths NZ">Woolworths NZ</option>
+        <option value="Carter & Spencer NZ">Carter & Spencer NZ</option>
+      </select>
+
+      <label for="location">Location:</label>
+      <select id="location" required>
+        <option value="" disabled>Select a location</option>
+        <option value="SKU Limited">SKU Limited</option>
+        <option value="GVI Timberly">GVI Timberly</option>
+      </select>
+
+      <label for="reportId">Report ID / Container #:</label>
+      <input type="text" id="reportId" required />
+
+      <label for="linesLot">Lines / Lot:</label>
+      <input type="text" id="linesLot" required />
+
+      <label>Inspector Initials (DP / AL):</label>
+      <div class="inspectors">
+        <select id="inspector1">
+          <option value="">–</option>
+          <option value="DP">DP</option>
+          <option value="AL">AL</option>
+        </select>
+        <select id="inspector2">
+          <option value="">–</option>
+          <option value="DP">DP</option>
+          <option value="AL">AL</option>
+        </select>
+        <select id="inspector3">
+          <option value="">–</option>
+          <option value="DP">DP</option>
+          <option value="AL">AL</option>
+        </select>
+      </div>
+
+      <label for="crops">Crops:</label>
+      <input type="text" id="crops" required />
+
+      <label for="comments">Comments:</label>
+      <textarea id="comments" rows="4" placeholder="Enter additional comments here..."></textarea>
+
+      <button type="submit">Download CSV</button>
+    </form>
+  </div>
+
+  <script>
+    // Navigation
+    function goToPage2() {
+      if (
+        document.getElementById("date").value &&
+        document.getElementById("region").value &&
+        document.getElementById("leadInspector").value
+      ) {
+        document.getElementById("page1").classList.add("hidden");
+        document.getElementById("page2").classList.remove("hidden");
+      } else {
+        alert("Please complete all fields before continuing.");
+      }
+    }
+
+    function goBack() {
+      document.getElementById("page2").classList.add("hidden");
+      document.getElementById("page1").classList.remove("hidden");
+    }
+
+    // Download CSV
+    document.getElementById("importsForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const data = {
+        date: document.getElementById("date").value,
+        region: document.getElementById("region").value,
+        leadInspector: document.getElementById("leadInspector").value,
+        startTime: document.getElementById("startTime").value,
+        endTime: document.getElementById("endTime").value,
+        client: document.getElementById("client").value,
+        location: document.getElementById("location").value,
+        reportId: document.getElementById("reportId").value,
+        linesLot: document.getElementById("linesLot").value,
+        inspector1: document.getElementById("inspector1").value,
+        inspector2: document.getElementById("inspector2").value,
+        inspector3: document.getElementById("inspector3").value,
+        crops: document.getElementById("crops").value,
+        comments: document.getElementById("comments").value,
+      };
+
+      const headers = [
+        "Date", "Region", "Lead Inspector",
+        "Start Time", "End Time", "Client", "Location", "Report ID/Container #", "Lines/Lot",
+        "Inspector 1", "Inspector 2", "Inspector 3",
+        "Crops", "Comments"
+      ];
+
+      const csvRow = [
+        data.date, data.region, data.leadInspector,
+        data.startTime, data.endTime, data.client, data.location, data.reportId, data.linesLot,
+        data.inspector1, data.inspector2, data.inspector3,
+        data.crops, data.comments
+      ].map(value => `"${value.replace(/"/g, '""')}"`).join(",");
+
+      const csvContent = headers.join(",") + "\n" + csvRow + "\n";
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "qa_inspection_log.csv");
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      document.getElementById("generalForm").reset();
+      document.getElementById("importsForm").reset();
+      goBack();
+    });
+  </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log('Service Worker registered'));
+  }
+</script>
+
+</body>
+</html>
