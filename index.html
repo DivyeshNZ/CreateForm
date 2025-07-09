@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#0078d7" />
-
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0078d7" />
   <meta charset="UTF-8" />
   <title>Time Tracking Form</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -16,7 +14,7 @@
       padding: 20px;
     }
 
-    h2, h3 {
+    h2 {
       text-align: center;
     }
 
@@ -76,19 +74,19 @@
 
       <label for="region">Region:</label>
       <select id="region" required>
-        <option value="" disabled>Select a region</option>
+        <option value="" disabled selected>Select a region</option>
         <option value="Auckland">Auckland</option>
         <option value="Christchurch">Christchurch</option>
       </select>
 
       <label for="leadInspector">Lead Inspector Name:</label>
       <select id="leadInspector" required>
-        <option value="" disabled>Select an Inspector</option>
+        <option value="" disabled selected>Select an Inspector</option>
         <option value="Divyesh Patel">Divyesh Patel</option>
         <option value="Anthony Lim">Anthony Lim</option>
       </select>
 
-      <button type="button" onclick="goToPage2()">Next: QA Imports</button>
+      <button type="button" onclick="goToPage2()">QA Imports</button>
     </form>
   </div>
 
@@ -105,14 +103,14 @@
 
       <label for="client">Client:</label>
       <select id="client" required>
-        <option value="" disabled>Select a client</option>
+        <option value="" disabled selected>Select a client</option>
         <option value="Woolworths NZ">Woolworths NZ</option>
         <option value="Carter & Spencer NZ">Carter & Spencer NZ</option>
       </select>
 
       <label for="location">Location:</label>
       <select id="location" required>
-        <option value="" disabled>Select a location</option>
+        <option value="" disabled selected>Select a location</option>
         <option value="SKU Limited">SKU Limited</option>
         <option value="GVI Timberly">GVI Timberly</option>
       </select>
@@ -123,7 +121,7 @@
       <label for="linesLot">Lines / Lot:</label>
       <input type="text" id="linesLot" required />
 
-      <label>Inspector Initials (DP / AL):</label>
+      <label>Inspector Initials:</label>
       <div class="inspectors">
         <select id="inspector1">
           <option value="">–</option>
@@ -153,7 +151,6 @@
   </div>
 
   <script>
-    // Navigation
     function goToPage2() {
       if (
         document.getElementById("date").value &&
@@ -172,7 +169,6 @@
       document.getElementById("page1").classList.remove("hidden");
     }
 
-    // Download CSV
     document.getElementById("importsForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
@@ -193,43 +189,58 @@
         comments: document.getElementById("comments").value,
       };
 
-      const headers = [
-        "Date", "Region", "Lead Inspector",
-        "Start Time", "End Time", "Client", "Location", "Report ID/Container #", "Lines/Lot",
-        "Inspector 1", "Inspector 2", "Inspector 3",
-        "Crops", "Comments"
-      ];
+      // Send to Google Sheets
+      fetch("https://script.google.com/macros/s/AKfycbxPsx3_3oa_-khvRSG-kBfs7J1WfQurGQgF1xpMQyY7wkPzCrb52-lRpQpCo1vzIHYbVQ/exec", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then(() => {
+        console.log("Submitted to Google Sheets ✅");
 
-      const csvRow = [
-        data.date, data.region, data.leadInspector,
-        data.startTime, data.endTime, data.client, data.location, data.reportId, data.linesLot,
-        data.inspector1, data.inspector2, data.inspector3,
-        data.crops, data.comments
-      ].map(value => `"${value.replace(/"/g, '""')}"`).join(",");
+        // Now trigger CSV download
+        const headers = [
+          "Date", "Region", "Lead Inspector",
+          "Start Time", "End Time", "Client", "Location", "Report ID/Container #", "Lines/Lot",
+          "Inspector 1", "Inspector 2", "Inspector 3",
+          "Crops", "Comments"
+        ];
 
-      const csvContent = headers.join(",") + "\n" + csvRow + "\n";
+        const csvRow = [
+          data.date, data.region, data.leadInspector,
+          data.startTime, data.endTime, data.client, data.location, data.reportId, data.linesLot,
+          data.inspector1, data.inspector2, data.inspector3,
+          data.crops, data.comments
+        ].map(value => `"${value.replace(/"/g, '""')}"`).join(",");
 
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", "qa_inspection_log.csv");
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        const csvContent = headers.join(",") + "\n" + csvRow + "\n";
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "qa_inspection_log.csv");
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-      document.getElementById("generalForm").reset();
-      document.getElementById("importsForm").reset();
-      goBack();
+        // Reset
+        document.getElementById("generalForm").reset();
+        document.getElementById("importsForm").reset();
+        goBack();
+      })
+      .catch((err) => {
+        alert("Submission to Sheets failed: " + err.message);
+      });
     });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker registered'));
+    }
   </script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log('Service Worker registered'));
-  }
-</script>
 
 </body>
 </html>
